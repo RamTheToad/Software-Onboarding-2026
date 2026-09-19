@@ -26,6 +26,7 @@ from rclpy.action import ActionClient
 # 
 # Here, import SleepFor from the interfaces.action module
 # SleepFor is the custom action type.
+from interfaces.action import SleepFor
 
 # ROS 2 boilerplate pattern:
 # 1. Import rclpy and the base Node class.
@@ -42,10 +43,12 @@ class Client(Node):
     def __init__(self):
         super().__init__('action_client')
 
+        self._action_client = ActionClient(self, SleepFor, 'sleep_for')
         # TODO: Create an action client for the SleepFor action type.
+
         # TODO: Wait until the action server is available.
         # TODO: Construct a goal with a duration value.
-
+    
         # ActionClient():
         #   Creates an action client used to send goals to a ROS action server.
         #   Usage: ActionClient(Node, ActionType, 'action_name')
@@ -59,10 +62,16 @@ class Client(Node):
 
     # Create a method that sends the action goal.
     def send_goal(self, seconds):
+        goal_msg = SleepFor.Goal()
+        goal_msg.seconds = seconds
         # client.wait_for_server():
         #   Blocks until the action server is available and ready to receive goals.
         #   Usage: self._action_client.wait_for_server()
         #
+        while not self._action_client.wait_for_server(1.0):
+            self.get_logger().info("Server Not Available Yet Twin")
+        
+        return self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
         # client.send_goal_async(goal_msg, feedback_callback):
         #   Sends the goal to the server asynchronously and returns a future.
         #   Usage: future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
@@ -74,16 +83,18 @@ class Client(Node):
         # TODO: Use a feedback callback that logs feedback from the server.
         # NOTE: The feedback callback can be attached when you call the server's 
         #       send_goal_async() method.
-        pass
 
     def feedback_callback(self, feedback_msg):
+        if feedback_msg.feedback is not None:
+            remaining_time = feedback_msg.feedback.remaining
+            self.get_logger().info(f"Remaining time: {remaining_time:.2f} seconds")
         # feedback_msg.feedback:
         #   The data returned by the action server while the task is in progress.
         #   Usage: feedback_msg.feedback.remaining
         # TODO: Read and log feedback_msg.feedback.
-        pass
 
 def main():
+    rclpy.init()
     node = Client()
     future = node.send_goal(10.0) # 10 seconds sleep duration
     rclpy.spin_until_future_complete(node, future)

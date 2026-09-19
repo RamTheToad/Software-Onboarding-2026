@@ -31,6 +31,9 @@ from rclpy.action import ActionServer
 #
 # Here, import SleepFor from the interfaces.action module
 # SleepFor is the custom action type.
+from interfaces.action import SleepFor
+
+import time
 
 # ROS 2 boilerplate pattern:
 # 1. Import rclpy and the base Node class.
@@ -48,9 +51,10 @@ class Server(Node):
         super().__init__('action_server')
 
         # TODO: Create an action server for the SleepFor action type.
+        self.server = ActionServer(self, SleepFor, 'sleep_for', self.execute_callback)
         # TODO: Use an execute_callback that handles the goal.
-        # TODO: Publish feedback while sleeping.
 
+        # TODO: Publish feedback while sleeping.
         # ActionServer():
         #   Creates an action server that receives goals and manages execution.
         #   Usage: ActionServer(Node, ActionType, 'action_name', execute_callback)
@@ -68,9 +72,18 @@ class Server(Node):
     # The callback should read the goal, send feedback periodically, and return a result.
     def execute_callback(self, goal_handle):
         # TODO: Read goal_handle.request.seconds
+        sleep_time = goal_handle.request.seconds
+        while (sleep_time > 0):
+            time.sleep(0.1)
+            sleep_time = max(0, sleep_time - 0.1)
+
+            feedback = SleepFor.Feedback()
+            feedback.remaining = sleep_time
+            goal_handle.publish_feedback(feedback)
         # TODO: Sleep for the requested duration
         # TODO: Construct SleepFor.Feedback object and periodically publish remaining time
         # TODO: Call goal_handle.succeed() when done
+        goal_handle.succeed()
         # TODO: Set the result as successful and return it
         # NOTE: There are several ways to handle the feedback mechanism here, but the most intuitive 
         #       is probably to use a loop that sleeps for a short interval (e.g., 0.1 seconds) and 
@@ -84,7 +97,8 @@ class Server(Node):
         #   Marks the goal as completed successfully.
         #   Usage: goal_handle.succeed()
         #   After calling this, build and return the final SleepFor.Result message.
-        return None
+        result = SleepFor.Result(success=True)
+        return result
 
 def main():
     rclpy.init()
