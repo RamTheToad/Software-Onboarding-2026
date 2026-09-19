@@ -46,7 +46,7 @@ class ServiceServer(Node):
         super().__init__('service_server')
 
         # TODO: Create a service for the random-number request/response type.
-        self.service = self.create_service(RandomNumber,'/rng', self.generate_random_number)
+        self.service = self.create_service(RandomNumber,'/generate_random_number', self.generate_random_number)
         # TODO: Use a callback method such as self.generate_random_number
         # TODO: Register the service under a topic name like 'generate_random_number'
 
@@ -71,22 +71,24 @@ class ServiceServer(Node):
     # and return a response containing the generated number.
     def generate_random_number(self, request, response):
         # TODO: Read request.min_value and request.max_value
+        self.get_logger().info("RNG: received request for min: %d, max: %d" %
+                               (int(request.min_value), int(request.max_value)))
         if request.min_value > request.max_value:
             self.get_logger().error(
                 'RNG: min value %d is greater than max value %d' %
                 (int(request.min_value), int(request.max_value)))
             response.random_number = 0
             return response
-        min = request.min_value
-        max = request.max_value
+        min_val = request.min_value
+        max_val = request.max_value
         # TODO: Generate a random integer in the requested range
-        rand_int = random.randint(min, max)
+        rand_int = random.randint(min_val, max_val)
         # TODO: Set response.random_number to the generated value
         response.random_number = rand_int
         # TODO: Return response
         self.get_logger().info(
         'RNG: for max: %d, min: %d = %d' %
-        (int(min), int(max), rand_int))
+        (int(min_val), int(max_val), rand_int))
         return response
 
 def main():

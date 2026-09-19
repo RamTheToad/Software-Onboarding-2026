@@ -42,10 +42,13 @@ class ServiceClient(Node):
         super().__init__('service_client')
 
         # TODO: Create a client for the random-number service
-        self.client = self.create_client(RandomNumber, 'generate_random_number')
+        self.client = self.create_client(RandomNumber, '/generate_random_number')
 
         # TODO: Wait for the service to be available
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Service not available, waiting again...')
         # TODO: Create a request containing min and max values
+        self.request = RandomNumber.Request()
 
         # self.create_client:
         #   Creates a service client used to call a ROS service.
@@ -71,18 +74,16 @@ class ServiceClient(Node):
         self.request.max_value = max_value
         # TODO: Call the service and wait for a response
         future = self.client.call_async(self.request)
-        rclpy.spin_until_future_complete(self, future)
-        response = future.result()
         
         # TODO: Log the returned random number
-        self.get_logger().info(f"Generated Random Number: {response.random_number}")
+        return future
         
 
 def main():
     rclpy.init()
     node = ServiceClient()
     # Get handle on request which will resolve in the future
-    future = node.send_request()
+    future = node.send_request(1, 100)
     # Continue running node until response recieved
     rclpy.spin_until_future_complete(node, future)
     try:
