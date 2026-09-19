@@ -34,9 +34,13 @@ from std_msgs.msg import String
 class Pub(Node):
     def __init__(self):
         super().__init__('pub')
-
+        self.i = 0
+        timer_period = 1.0
         # TODO: Create a publisher for String messages on the "topic" topic with a queue size of 10
+        self.topicPub = self.create_publisher(msg_type=String, topic="topic", qos_profile=10) #queue_size = 10
         # TODO: Create a timer that calls self.timer_callback every 1 second (1.0)
+        self.callbackFunc = callable(self.timer_callback())
+        self.timeCheck = self.create_timer(timer_period, self.timer_callback)
 
         # create_timer:
         #   Creates a repeating callback based on a time interval.
@@ -58,16 +62,23 @@ class Pub(Node):
     # where i is an incremented intenger, and publish it to the topic.
     def timer_callback(self):
         # TODO: Create message object of type String
-        # TODO: Set its data attribute to "Message {self.i}!" where i is an incremented integer
+        message = String()
+        # TODO: Set its data attribute to "Message {i}!" where i is an incremented integer
+        message.data = f"Message {self.i}!"
+        self.i += 1
         # TODO: Publish the message using the publisher created in __init__
+        self.topicPub.publish(message)
         pass
 
-def main():
+def main(args = None):
     rclpy.init()
     node = Pub()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
 
 if __name__ == '__main__':
     main()

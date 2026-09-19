@@ -18,7 +18,7 @@
 # request to the service and prints the random value it receives. Together, these
 # nodes demonstrate how ROS 2 services provide synchronous request/response
 # communication between nodes.
-
+import random
 import rclpy
 from rclpy.node import Node
 
@@ -28,6 +28,7 @@ from rclpy.node import Node
 #
 # Here, import RandomNumber from the interfaces.srv module
 # RandomNumber is the custom Service type.
+from interfaces.srv import RandomNumber
 
 # ROS 2 boilerplate pattern:
 # 1. Import rclpy and the base Node class.
@@ -45,6 +46,7 @@ class ServiceServer(Node):
         super().__init__('service_server')
 
         # TODO: Create a service for the random-number request/response type.
+        self.service = self.create_service(RandomNumber,'/rng', self.generate_random_number)
         # TODO: Use a callback method such as self.generate_random_number
         # TODO: Register the service under a topic name like 'generate_random_number'
 
@@ -69,9 +71,22 @@ class ServiceServer(Node):
     # and return a response containing the generated number.
     def generate_random_number(self, request, response):
         # TODO: Read request.min_value and request.max_value
+        if request.min_value > request.max_value:
+            self.get_logger().error(
+                'RNG: min value %d is greater than max value %d' %
+                (int(request.min_value), int(request.max_value)))
+            response.random_number = 0
+            return response
+        min = request.min_value
+        max = request.max_value
         # TODO: Generate a random integer in the requested range
+        rand_int = random.randint(min, max)
         # TODO: Set response.random_number to the generated value
+        response.random_number = rand_int
         # TODO: Return response
+        self.get_logger().info(
+        'RNG: for max: %d, min: %d = %d' %
+        (int(min), int(max), rand_int))
         return response
 
 def main():

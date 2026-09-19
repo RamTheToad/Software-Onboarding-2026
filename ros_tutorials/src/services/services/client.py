@@ -15,6 +15,7 @@
 # and prints the generated random value. Together, these two nodes demonstrate
 # how ROS 2 services provide synchronous request/response communication.
 
+import sys
 import rclpy
 from rclpy.node import Node
 
@@ -24,6 +25,7 @@ from rclpy.node import Node
 # 
 # Here, import RandomNumber from the interfaces.srv module
 # RandomNumber is the custom Service type.
+from interfaces.srv import RandomNumber
 
 # ROS 2 boilerplate pattern:
 # 1. Import rclpy and the base Node class.
@@ -40,6 +42,8 @@ class ServiceClient(Node):
         super().__init__('service_client')
 
         # TODO: Create a client for the random-number service
+        self.client = self.create_client(RandomNumber, 'generate_random_number')
+
         # TODO: Wait for the service to be available
         # TODO: Create a request containing min and max values
 
@@ -61,17 +65,18 @@ class ServiceClient(Node):
         #   Usage: self.get_logger().info('message')
 
     # Create a method that sends the service request.
-    def send_request(self):
-        # TODO: Build a RandomNumber.Request object with a min and max range
-        # TODO: Call the service asynchronously
-        #
-        # client.call_async:
-        #   Sends the request without blocking and returns a Future for the response.
-        #   Usage: self.client.call_async(request)
-        #   The Future can be passed to rclpy.spin_until_future_complete(...)
-        #   and its result can then be read with future.result().
-
-        pass
+    def send_request(self, min_value, max_value):
+        # TODO: Build a request object with a min and max range
+        self.request.min_value = min_value
+        self.request.max_value = max_value
+        # TODO: Call the service and wait for a response
+        future = self.client.call_async(self.request)
+        rclpy.spin_until_future_complete(self, future)
+        response = future.result()
+        
+        # TODO: Log the returned random number
+        self.get_logger().info(f"Generated Random Number: {response.random_number}")
+        
 
 def main():
     rclpy.init()
